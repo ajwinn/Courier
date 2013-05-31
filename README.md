@@ -9,8 +9,7 @@ Front-end developers puke when they think about needing server-side code. `#ster
 
 And yet, web services like the Facebook API generally want **files** POSTed to them - not the `base64` encoded version of the `<canvas>` that comes from `.toDataURL()`.
 
-With the monumental, stupendous, magical, heroic, tasty help of [Canvas-to-Blob.js](https://github.JavaScript-Canvas-to-Blob), Courier.js can send carry your message to a web service all binary-ish.
-
+With the monumental, stupendous, magical, heroic, tasty help of [Canvas-to-Blob.js](https://github.JavaScript-Canvas-to-Blob), Courier.js can carry your image to a web service in all its binary-ish glory.
 
 
 # Usage
