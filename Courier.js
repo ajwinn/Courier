@@ -33,41 +33,99 @@
   }) : a.dataURLtoBlob = f
 })(this);
 
-function Courier(options){
-  this.canvas = document.getElementById(options.canvas_id);
-  var settings = options.settings;
-  var callback = options.callback;
-  if (options.service == 'fb') {
-    var  fb_target = 'https://graph.facebook.com/'+settings.fb_id+'/photos';
-    this.canvas.toBlob(function(blob){
-      var formData = new FormData();
-      formData.append('file',blob);
-      formData.append('to',settings.fb_id);
-      formData.append('access_token',settings.token);
-
-      var XHR = new XMLHttpRequest();
-      XHR.onreadystatechange=function(){
-        if (XHR.readyState==4 && XHR.status==200){
-          callback(XHR.responseText);
-        }
+Array.prototype.getUnique = function(){
+   var u = {}, a = [];
+   for(var i = 0, l = this.length; i < l; ++i){
+      if(u.hasOwnProperty(this[i])) {
+         continue;
       }
-      XHR.open('POST',fb_target,true);
-      XHR.send(formData);
-    })
+      a.push(this[i]);
+      u[this[i]] = 1;
+   }
+   return a;
+}
+
+function Courier(id, settings) {
+
+  var canvas = document.getElementById(id),
+    fields = Object.keys(settings),
+    formData = [],
+    XHR = [],
+    courier_blob;
+
+  // determine services from settings
+  var services = [];
+  for (var i = 0; i < fields.length; i++) {
+    var service_name = fields[i].split('_')[0];
+    services.push(service_name);
+  };
+  services = services.getUnique();
+
+  canvas.toBlob(function(blob) {
+    courier_blob = blob;
+  });
+
+  // Append non-endpoint & callback fields to form,
+  // then set endpoint & callback 
+  // then send form
+  for (var i = 0; i < fields.length; i++) {
+    fields[i]
+  };
+
+  for (var i = 0; i < services.length; i++) {
+    formData[i] = new FormData();
+    var endpoint, callback, file_field;
+    for (var i = 0; i < fields.length; i++) {
+      var service = fields[i].split('_')[0];
+      var key = fields[i].split(service + '_')[1];
+
+      if (services[i] == service) {
+        var value = settings[fields[i]];
+        if (key != 'endpoint' 
+          && key != 'callback' 
+          && key != 'file_field') {
+          console.log('not weird', key);
+          formData[i].append(key, value);
+        }
+        if (key == 'file_field') {
+          console.log('file',key);
+          file_field = settings[fields[i]];
+          formData[i].append(file_field,courier_blob);
+        };
+        if (key == 'endpoint') {
+          console.log('endpoint:',endpoint);
+          endpoint = value;
+        }
+        if (key == 'callback') {
+          console.log('callback:',callback);
+          callback = value;
+        }
+        console.log(value);
+      }
+    };
+
+    XHR[i] = new XMLHttpRequest();
+    XHR[i].onreadystatechange = function() {
+      if (XHR[i].readyState == 4 && XHR[i].status == 200) {
+        callback(XHR[i].responseText);
+      }
+    }
+    console.log('endpoint:', endpoint);
+    XHR[i].open('POST', endpoint, true);
+    XHR[i].send(formData[i]);
   };
 }
 
-Courier({
-  service:'fb',
-  canvas_id:'your-canvas-id',
-  settings:{
-    fb_id:(FB.getUserID()),
-    token:(FB.getAccessToken())
-  },
-  callback: function(response){
-    // do something with response
-    // probably looks like:
-    // {'id':'1234','post_id':'4567'}
-    console.log(response);
-  }
-});
+Courier('your-canvas-id', 
+    { 
+      facebook_to: (FB.getUserID()),
+      facebook_access_token: (FB.getAccessToken()),
+      facebook_file_field: 'file',
+      facebook_endpoint: 'https://graph.facebook.com/'+(FB.getUserID())+'/photos',
+      facebook_callback: function(response){
+        //do something with response
+        console.log(response);
+      }
+    }
+)
+
